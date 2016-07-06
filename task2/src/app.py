@@ -1,19 +1,8 @@
-from datetime import datetime
 import random
 
 from bottle import default_app, route, run, view, request, response
-from peewee import *
 
-
-db = SqliteDatabase('messages.db')
-
-class Message(Model):
-    message = CharField(null=False)
-    response = CharField(null=False)
-    created = DateTimeField(default=datetime.now)
-
-    class Meta:
-        database = db
+from models import Message
 
 
 YES_LIST = [
@@ -83,6 +72,8 @@ QUESTIONS = [
 CONFIRMATION_MSG = 'I didn\'t understand you. '\
                    'Do you still want to talk?'
 
+START_TALK_MSG = 'Yey. Let\'s talk.\n'
+
 
 @route('/')
 @view('index')
@@ -117,6 +108,8 @@ def bot():
         else:
             confimation = False
             res = random.choice(QUESTIONS)
+        if was_confirmation and msg_type == 'yes':
+            res = START_TALK_MSG + res
         Message(message=message, response=res).save()
         return {'text': res,
                 'confirmation': confimation,

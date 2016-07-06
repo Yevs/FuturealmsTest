@@ -28,11 +28,30 @@ body {
 .send-button {
     cursor: pointer;
 }
+
+.message-list {
+    padding-left: 5px;
+    padding-right: 5px;
+    list-style-type: none;
+}
+
+.message-list li {
+    padding: 2px;
+    margin: 3px auto;
+}
+
+.user-msg {
+    background-color: #E3DB6B;
+}
+
+.bot-msg {
+    background-color: #9193EB;
+}
 </style>
 <div class="chat">
 <div class="messages">
 <ul class="message-list">
-    <li>Do you want to have a little talk?</li>
+    <li class="bot-msg">Do you want to have a little talk?</li>
 </ul>
 </div>
 <form class="send-message">
@@ -45,6 +64,7 @@ body {
     'use strict'
 
     let button = $('.send-button')
+    let messages = $('.messages')[0]
     let messageInput = $('.message-input')[0]
     let msgList = $('.message-list')[0]
     let form = $('form')
@@ -61,7 +81,7 @@ body {
         e.preventDefault()
         let message = messageInput.value.trim()
         if (message) {
-            addMessage(message)
+            addMessage(message, 'user-msg')
             $.post('/bot', {
                 message,
                 confirmation
@@ -69,20 +89,13 @@ body {
                 let finish = data.finish
                 if (finish) {
                     form.hide()
+                    addMessage('What a pity. I am so lonely in this world.', 'bot-msg')
                 } else {
                     confirmation = data.confirmation
-                    addMessage(data.text)
+                    addMessage(data.text, 'bot-msg')
                 }
+                messages.scrollTop = messages.scrollHeight * 2
             })
-            // fetch('/bot', {
-            //     method: 'POST',
-            //     body: new FormData(form)
-            // })
-            // .then(response => response.json())
-            // .then(response => {
-
-            // })
-            // .catch(err => console.log(err))
         }
         messageInput.value = ''
     }
