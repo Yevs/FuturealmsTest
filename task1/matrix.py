@@ -2,35 +2,16 @@ import random
 from functools import reduce
 import operator
 
+import numpy as np
+
 
 def generate_matrix(upper_bound, length, width, height):
     """
     generates 3-dimensional array filled with random numbers greater than 0
     """
 
-    return [[[random.random()*upper_bound
-           for i in range(length)]
-               for j in range(width)]
-                   for k in range(height)]
+    return np.random.rand(length, width, height) * upper_bound
 
-
-def get_size(matrix):
-    """
-    returns size of 3-dimensional matrix: length, width, height
-    """
-
-    height = len(matrix)
-    width = len(matrix[0])
-    length = len(matrix[0][0])
-    return length, width, height
-
-
-def prod(iterable):
-    """
-    returns product of elements in iterable
-    """
-
-    return reduce(operator.mul, iterable, 1)
 
 
 def get_faces(matrix):
@@ -39,19 +20,19 @@ def get_faces(matrix):
     contain products of elements projected on them
     """
 
-    length, width, height = get_size(matrix)
-    facelw = [[1 for i in range(length)] for j in range(width)]
-    facelh = [[1 for i in range(length)] for k in range(height)]
-    facewh = [[1 for j in range(width)] for k in range(height)]
+    length, width, height = matrix.shape
+    facelw = np.ones((length, width))
+    facelh = np.ones((length, height))
+    facewh = np.ones((width, height))
     for i in range(length):
         for j in range(width):
-            facelw[i][j] = prod(matrix[i][j][k] for k in range(height))
+            facelw[i, j] = np.prod(matrix[i, j, :])
     for i in range(length):
         for k in range(height):
-            facelh[i][k] = prod(matrix[i][j][k] for j in range(width))
+            facelh[i, k] = np.prod(matrix[i, :, k])
     for j in range(width):
         for k in range(height):
-            facewh[j][k] = prod(matrix[i][j][k] for i in range(length))
+            facewh[j, k] = np.prod(matrix[:, j, k])
     return facelw, facelh, facewh
 
 
@@ -60,12 +41,8 @@ def get_min_coords(face):
     returns coordinates of minimum element in face (2-dimensional list)
     """
 
-    i_min, j_min = 0, 0
-    for i, row in enumerate(face):
-        for j, elem in enumerate(row):
-            if face[i_min][j_min] > face[i][j]:
-                i_min, j_min = i, j
-    return i_min, j_min
+    min_index = np.argmin(face)  # flattened
+    return np.floor_divide(min_index, face.shape[0]), min_index % face.shape[0]
 
 
 def get_rows(matrix):
@@ -75,13 +52,13 @@ def get_rows(matrix):
 
     faces = get_faces(matrix)
     coordslw, coordslh, coordswh = [get_min_coords(face) for face in faces]
-    length, width, height = get_size(matrix)
+    length, width, height = matrix.shape
     i, j = coordslw
-    yield [matrix[i][j][k] for k in range(height)]
+    yield matrix[i, j, :]
     i, k = coordslh
-    yield [matrix[i][j][k] for j in range(width)]
+    yield matrix[i, :, k]
     j, k = coordswh
-    yield [matrix[i][j][k] for i in range(length)]
+    yield matrix[:, j, k]
 
 def main():
     UPPER_BOUND = 10
